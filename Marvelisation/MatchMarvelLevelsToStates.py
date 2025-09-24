@@ -7,7 +7,7 @@ pd.set_option('display.float_format', '{:.6f}'.format)
 marvelColumns = ["nu1", "nu2", "nu3", "nu4", "L3", "L4", "J", "K", "inv", "Gamma", "Nb", "Em", "Uncertainty", "Transitions"]
 
 # marvelEnergies = pd.read_csv("14NH3-NewEnergies-MoreNbAssignments.txt", delim_whitespace=True, names=marvelColumns, dtype=str)
-marvelEnergies = pd.read_csv("14NH3-NewEnergies.txt", delim_whitespace=True, names=marvelColumns, dtype=str)
+marvelEnergies = pd.read_csv("14NH3-NewEnergies-BootstrapOff.txt", delim_whitespace=True, names=marvelColumns, dtype=str)
 marvelEnergiesOld = pd.read_csv("../CombinationDifferencesTests/14NH3-MarvelEnergies-2020.txt", delim_whitespace=True, names=marvelColumns, dtype=str)
 # marvelEnergies = marvelEnergies[marvelEnergies["Transitions"].astype(int) > 1]
 
@@ -66,7 +66,7 @@ marvelEnergies["Obs-Calc"] = marvelEnergies["Em"] - marvelEnergies["E"]
 marvelEnergies["Old"] = marvelTagAlreadyPresent
 
 marvelEnergies = marvelEnergies.to_string(index=False)
-marvelEnergiesFile = "14N-1H3__MarvelAgainstStates.energies"
+marvelEnergiesFile = "14N-1H3__MarvelAgainstStates-NoBootstrap.energies"
 with open(marvelEnergiesFile, "w+") as FileToWriteTo:
     FileToWriteTo.write(marvelEnergies)
 print("New states file ready!")
