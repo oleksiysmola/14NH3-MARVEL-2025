@@ -36,7 +36,8 @@ transitionsFiles = [
     "../16BaYuTeBe/16BaYuTeBe-MARVEL.txt",
     "../21ZoBeVaCi/21ZoBeVaCi-MARVEL.txt",
     "../18MaMaMaPa/18MaMaMaPa-MARVEL.txt",
-    "../25CaCa/25CaCa-MARVEL.txt"
+    "../25CoHaBeDe/25CoHaBeDe-Marvel.txt",
+    # "../25CaCa/25CaCa-MARVEL.txt"
 ]
 
 for transitionFile in transitionsFiles:
@@ -270,8 +271,8 @@ transitionsToCorrect = {
 # Reassignments marked with a # are considered potentially dubious
 transitionsToReassign = {
     "16BaYuTeBe.320" : ["1-1-1-0-1-0-4-3-a-E'-364", "0-0-0-0-0-0-4-1-s-E\"-195"], # Different rovibrational quantum numbers
-    "25CaCa.1195" : [None, "0-0-0-0-0-0-1-1-s-E\"-1"], # Typo?
-    "25CaCa.1725" : [None, "0-0-0-0-0-0-1-1-s-E\"-1"], # Typo?
+    # "25CaCa.1195" : [None, "0-0-0-0-0-0-1-1-s-E\"-1"], # Typo?
+    # "25CaCa.1725" : [None, "0-0-0-0-0-0-1-1-s-E\"-1"], # Typo?
     # "25CaCa.2605" : [None, "0-0-0-0-0-0-1-1-s-E\"-1"], # Typo?
     "21CaCeBeCa.480" : ["0-6-0-0-0-0-8-4-s-E'-308", None],
     "21CaCeBeCa.1119": ["0-6-0-0-0-0-8-4-s-E'-308", None],
@@ -1117,7 +1118,7 @@ allTransitions = allTransitions.parallel_apply(lambda x:removeTransitions(x, tra
 # Filtering
 Jupper = 0
 transitions = allTransitions[allTransitions["nu"] > 0]
-transitions = transitions[transitions["J'"] == Jupper]
+# transitions = transitions[transitions["J'"] == Jupper]
 print(transitions.head(20).to_string(index=False))
 
 def assignStateTags(row):
