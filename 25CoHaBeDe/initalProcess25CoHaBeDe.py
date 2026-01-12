@@ -31,6 +31,12 @@ groupMultiplicationTable = {}
 #     "A1\""
 # }
 
+mapPQR = {
+    "p": -1,
+    "q": 0,
+    "r": 1,
+}
+
 def columnSplitter(row, marvelEnergies):
     row["unc1"] = float(row["nu"].split("(")[1][:-1])*1e-6
     if row["unc1"] < 1e-6:
@@ -39,6 +45,8 @@ def columnSplitter(row, marvelEnergies):
     row["nu"] = row["nu"].split("(")[0]
     row["J\""] = row["PQR"].split("(")[1].split(",")[0]
     row["K\""] = row["PQR"].split("(")[1].split(",")[1].split(")")[0]
+    row["J'"] = int(row["J\""])  + mapPQR[row["PQR"][1].lower()]
+    row["K'"] = int(row["K\""])  + mapPQR[row["PQR"][0].lower()]
     row["inv\""] = row["PQR"][-1].lower()
     row["nu1\""] = 0 
     row["nu2\""] = 0
@@ -64,9 +72,18 @@ def columnSplitter(row, marvelEnergies):
     row["L3'"] = 0
     row["L4'"] = 0
     if 203 >= row["point"]:
-        row["nu2'"]
+        row["nu2'"] = 1
+        if row["inv\""] == "a":
+            row["inv'"] = "s"
+        else:
+            row["inv'"] = "a"
     if 523 > row["point"] > 203:
         row["nu2\""] = 1
+        row["nu2'"] = 2
+        if row["inv\""] == "a":
+            row["inv'"] = "s"
+        else:
+            row["inv'"] = "a"
     elif row["point"] >= 523:
         row["nu4\""] = 1
         row["L4\""] = 1
@@ -125,7 +142,7 @@ def matchTransitions(row, marvelTransitions):
 
 df = df.parallel_apply(lambda x:matchTransitions(x, marvelTransitions), axis=1, result_type="expand")
 
-df = df[["PQR", "nu", "unc1", "unc2", "nu1'", "nu2'", "nu3'", "nu4'", "L3'", "L4'", "J'", "K'", "inv'", "Gamma'", "Nb'", "nu1\"", "nu2\"", "nu3\"", "nu4\"", "L3\"", "L4\"", "J\"", "K\"", "inv\"", "Gamma\"", "Nb\"", "Matches", "Obs-Calc"]]
+df = df[["PQR", "nu", "unc1", "unc2", "nu1'", "nu2'", "nu3'", "nu4'", "L3'", "L4'", "J'", "K'", "inv'", "Gamma'", "Nb'", "nu1\"", "nu2\"", "nu3\"", "nu4\"", "L3\"", "L4\"", "J\"", "K\"", "inv\"", "Gamma\"", "Nb\"", "point", "Matches", "Obs-Calc"]]
 df2 = df[df["Obs-Calc"] > 5e-2]
 df = df[df["Obs-Calc"] < 5e-2]
 df["Source"] = [f"25CoHaBeDe.{i+1}" for i in range(len(df))] 
@@ -139,8 +156,8 @@ selectionRules = {
     "E\"": "E'",
 }
 
-# statesFileColumns = ["i", "E", "g", "J", "weight", "p", "Gamma", "Nb", "n1", "n2", "n3", "n4", "l3", "l4", "inversion", "J'", "K'", "pRot", "v1", "v2", "v3", "v4", "v5", "v6", "GammaVib", "Calc"]
-# states = pd.read_csv("../14N-1H3__CoYuTe.states", delim_whitespace=True, names=statesFileColumns)
+statesFileColumns = ["i", "E", "g", "J", "weight", "p", "Gamma", "Nb", "n1", "n2", "n3", "n4", "l3", "l4", "inversion", "J'", "K", "pRot", "v1", "v2", "v3", "v4", "v5", "v6", "GammaVib", "Calc"]
+states = pd.read_csv("../14N-1H3__CoYuTe.states", delim_whitespace=True, names=statesFileColumns)
 # states = states[states["E"] < 7000]
 # states = states[states["g"] > 0]
 # states = states[states["J"] == Jupper]
@@ -169,10 +186,114 @@ marvelFile = "25CoHaBeDe-Marvel.txt"
 with open(marvelFile, "w+") as FileToWriteTo:
     FileToWriteTo.write(df)
 
-df2 = df2.parallel_apply(lambda x:columnSplitter(x, marvelEnergies), result_type="expand", axis=1)
+inversionMap = {
+    "s": 0,
+    "a": 1
+}
+symmetryMap = {
+    "A1'": 1,
+    "A2'": 2,
+    "E'": 3,
+    "A1\"": 4,
+    "A2\"": 5,
+    "E\"": 6,
+}
+symmetryMap2 = {
+    1: "A1'",
+    2: "A2'",
+    3: "E'",
+    4: "A1\"",
+    5: "A2\"",
+    6: "E\"",
+}
+def sortUnmatched(row, states):
+    # row["unc1"] = float(row["nu"].split("(")[1][:-1])*1e-6
+    # if row["unc1"] < 1e-6:
+    #     row["unc1"] += 1e-6
+    # row["unc2"] = row["unc1"]
+    # row["nu"] = row["nu"].split("(")[0]
+    row["J\""] = row["PQR"].split("(")[1].split(",")[0]
+    row["K\""] = row["PQR"].split("(")[1].split(",")[1].split(")")[0]
+    row["J'"] = int(row["J\""])  + mapPQR[row["PQR"][1].lower()]
+    row["K'"] = int(row["K\""])  + mapPQR[row["PQR"][0].lower()]
+    row["inv\""] = row["PQR"][-1].lower()
+    row["nu1\""] = 0 
+    row["nu2\""] = 0
+    row["nu3\""] = 0 
+    row["nu4\""] = 0 
+    row["L3\""] = 0 
+    row["L4\""] = 0
+    row["Nb\""] = 0
+    matchingEnergies = states[states["J"] == int(row["J\""])]
+    matchingEnergies = matchingEnergies[matchingEnergies["K"] == int(row["K\""])]
+    matchingEnergies = matchingEnergies[matchingEnergies["inversion"] == inversionMap[row["inv\""]]]
+    matchingEnergies = matchingEnergies[matchingEnergies["n1"] == int(row["nu1\""])]
+    matchingEnergies = matchingEnergies[matchingEnergies["n3"] == int(row["nu3\""])]
+    matchingEnergies = matchingEnergies[matchingEnergies["l3"] == int(row["L3\""])]
+    # if  row["inv\""] == "s":
+    #     row["GammaVib\""] = "A1'"
+    # else:
+    #     row["GammaVib\""] = "A2\""
+    row["nu1'"] = 0
+    row["nu2'"] = 0
+    row["nu3'"] = 0
+    row["nu4'"] = 0
+    row["L3'"] = 0
+    row["L4'"] = 0
+    if 203 >= row["point"]:
+        row["nu2'"] = 1
+        if row["inv\""] == "a":
+            row["inv'"] = "s"
+        else:
+            row["inv'"] = "a"
+    if 523 > row["point"] > 203:
+        row["nu2\""] = 1
+        row["nu2'"] = 2
+        if row["inv\""] == "a":
+            row["inv'"] = "s"
+        else:
+            row["inv'"] = "a"
+    elif row["point"] >= 523:
+        row["nu4\""] = 1
+        row["L4\""] = 1
+        # if  row["inv\""] == "s":
+        #     row["GammaVib\""] = "E'"
+        # else:
+        #     row["GammaVib\""] = "E\""
+    matchingEnergies = matchingEnergies[matchingEnergies["n2"] == int(row["nu2\""])]
+    matchingEnergies = matchingEnergies[matchingEnergies["n4"] == int(row["nu4\""])]
+    matchingEnergies = matchingEnergies[matchingEnergies["l4"] == int(row["L4\""])]
+    matchingEnergy = matchingEnergies.head(1).squeeze()
+    if len(matchingEnergies) >= 1:
+        row["Gamma\""] = symmetryMap2[matchingEnergy["Gamma"]]
+        row["Nb\""] = int(matchingEnergy["Nb"])
+    row["Matches"] = len(matchingEnergies)
+    matchingEnergies2 = states[states["J"] == int(row["J'"])]
+    matchingEnergies2 = matchingEnergies2[matchingEnergies2["K"] == int(row["K'"])]
+    matchingEnergies2 = matchingEnergies2[matchingEnergies2["inversion"] == inversionMap[row["inv'"]]]
+    matchingEnergies2 = matchingEnergies2[matchingEnergies2["n1"] == int(row["nu1'"])]
+    matchingEnergies2 = matchingEnergies2[matchingEnergies2["n2"] == int(row["nu2'"])]
+    matchingEnergies2 = matchingEnergies2[matchingEnergies2["n3"] == int(row["nu3'"])]
+    matchingEnergies2 = matchingEnergies2[matchingEnergies2["n4"] == int(row["nu4'"])]
+    matchingEnergies2 = matchingEnergies2[matchingEnergies2["l3"] == int(row["L3'"])]
+    matchingEnergies2 = matchingEnergies2[matchingEnergies2["l4"] == int(row["L4'"])]
+    matchingEnergies2 = matchingEnergies2[matchingEnergies2["Gamma"] == symmetryMap[row["Gamma'"]]]
+    matchingEnergies2["Obs-Calc"] = abs(matchingEnergies2["E"] - (float(row["nu"]) + matchingEnergy["E"]))
+    matchingEnergies2 = matchingEnergies2.sort_values(by="Obs-Calc")
+    matchingEnergy2 = matchingEnergies2.head(1).squeeze()
+    row["Nb'"] = matchingEnergy2["Nb"]
+    row["Obs-Calc"] = matchingEnergy2["Obs-Calc"]
+    row["Matches"] = len(matchingEnergies2)
+    return row
 
 
+df2 = df2.parallel_apply(lambda x:sortUnmatched(x, states), result_type="expand", axis=1)
+df2["Source"] = [f"25CoHaBeDe.{i+618}" for i in range(len(df2))] 
+df2 = df2[["nu", "unc1", "unc2", "nu1'", "nu2'", "nu3'", "nu4'", "L3'", "L4'", "J'", "K'", "inv'", "Gamma'", "Nb'", "nu1\"", "nu2\"", "nu3\"", "nu4\"", "L3\"", "L4\"", "J\"", "K\"", "inv\"", "Gamma\"", "Nb\"", "Source", "Obs-Calc", "Matches"]]
 df2 = df2.to_string(index=False, header=False)
 marvelFile = "25CoHaBeDe-Unmatched.txt"
 with open(marvelFile, "w+") as FileToWriteTo:
     FileToWriteTo.write(df2)
+
+print("\n")
+print(states.head(5).to_string(index=False))

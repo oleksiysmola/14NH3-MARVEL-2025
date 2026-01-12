@@ -1,0 +1,4 @@
+INFO: Pandarallel will run on 6 workers.
+INFO: Pandarallel will use Memory file system to transfer data between the main process and workers.
+      i           E   g  J  weight p  Gamma  Nb  n1  n2  n3  n4  l3  l4  inversion  J'  K  pRot  v1  v2  v3  v4  v5  v6  GammaVib        Calc
+2670749 3293.715106 234 19     1.0 -      6   7   0   1   0   0   0   0          0  19 19     6   0   0   0   0   0   2         1 3293.715106

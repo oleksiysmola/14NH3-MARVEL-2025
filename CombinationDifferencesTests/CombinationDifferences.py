@@ -84,6 +84,12 @@ def removeTransitions(row, transitionsToRemove, transitionsToCorrect, transition
 
 # List of transitions to be invalidated
 transitionsToRemove = [
+    "25CoHaBeDe.619",
+    "25CoHaBeDe.620",
+    "25CoHaBeDe.628",
+    "25CoHaBeDe.629",
+    "25CoHaBeDe.630",
+    "25CoHaBeDe.631",
     "22CaCeVaCa.4941",
     "96BrMa.642",
     "21CaCeBeCa.1674",
